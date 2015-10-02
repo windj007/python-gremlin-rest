@@ -40,7 +40,7 @@ class ExecutableGremlin(Gremlin):
 
 class GremlinClient(ClientBase):
     def __init__(self, base_url, async = False):
-        super(RexsterClient, self).__init__(base_url,
+        super(GremlinClient, self).__init__(base_url,
                                             add_headers = { 'Content-Type' : 'application/json; charset=utf-8' },
                                             async = async)
         self.scripts = {}
@@ -81,6 +81,6 @@ class GremlinClient(ClientBase):
 
     ############################## Overrides ##########################
     def _do_req_base(self, *args, **kwargs):
-        return _ItemGetter(_ItemGetter(super(RexsterClient, self)._do_req_base(*args, **kwargs),
+        return _ItemGetter(_ItemGetter(super(GremlinClient, self)._do_req_base(*args, **kwargs),
                                        'result'),
                            'data')
