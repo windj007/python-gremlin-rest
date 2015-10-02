@@ -1,1 +1,1 @@
-from client import RexsterClient, Dir
+from client import GremlinClient

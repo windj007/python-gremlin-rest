@@ -3,15 +3,7 @@ from gremlinpy.gremlin import Gremlin
 from pyarc import ClientBase
 
 
-__ALL__ = ['RexsterClient', 'Dir', 'Q']
-
-
-class Dir:
-    IN = 'in'
-    OUT = 'out'
-    BOTH = 'both'
-
-_DIRS = frozenset({ Dir.IN, Dir.OUT, Dir.BOTH })
+__ALL__ = ['GremlinClient']
 
 
 class _ItemGetter(object):
@@ -26,16 +18,6 @@ class _ItemGetter(object):
             return base_res.get(self.attrib, self.default)
         except:
             return self.default
-
-
-class _FirstGetter(object):
-    def __init__(self, impl):
-        self.impl = impl
-    def get(self):
-        res = self.impl.get()
-        if len(res) > 0:
-            return res[0]
-        return None
 
 
 class ScriptCaller(object):
@@ -56,7 +38,7 @@ class ExecutableGremlin(Gremlin):
         return self.client.run_script(str(self), **self.bound_params)
 
 
-class RexsterClient(ClientBase):
+class GremlinClient(ClientBase):
     def __init__(self, base_url, async = False):
         super(RexsterClient, self).__init__(base_url,
                                             add_headers = { 'Content-Type' : 'application/json; charset=utf-8' },
@@ -99,4 +81,6 @@ class RexsterClient(ClientBase):
 
     ############################## Overrides ##########################
     def _do_req_base(self, *args, **kwargs):
-        return _ItemGetter(_ItemGetter(super(RexsterClient, self)._do_req_base(*args, **kwargs), 'result'), 'data')
+        return _ItemGetter(_ItemGetter(super(RexsterClient, self)._do_req_base(*args, **kwargs),
+                                       'result'),
+                           'data')
