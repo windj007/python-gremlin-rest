@@ -45,7 +45,6 @@ class GremlinClient(ClientBase):
                                             async = async)
         self.scripts = {}
         self.refresh_scripts(os.path.join(os.path.dirname(__file__), 'scripts'))
-        print repr(self.do_req)
 
     def __getattr__(self, script_name):
         assert script_name in self.scripts, 'Trying to call unknown script %s' % script_name
