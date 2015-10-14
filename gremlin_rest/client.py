@@ -20,6 +20,16 @@ class _ItemGetter(object):
             return self.default
 
 
+class ListWithFirst(list):
+    def __init__(self, *args):
+        list.__init__(self, *args)
+
+    def first(self, default = None):
+        if len(self) == 0:
+            return default
+        return self[0]
+
+
 class _WrapperAssigner(object):
     def __init__(self, base_future):
         self.base_future = base_future
@@ -27,7 +37,7 @@ class _WrapperAssigner(object):
     def get(self):
         base_res = self.base_future.get()
         try:
-            return map(get_wrapper, base_res)
+            return ListWithFirst(map(get_wrapper, base_res))
         except:
             return base_res
 
@@ -64,6 +74,11 @@ class GremlinClient(ClientBase):
 
     def gremlin(self):
         return ExecutableGremlin(self, graph_variable = 'graph')
+
+    def V(self, arg = None):
+        if not arg is None:
+            return self.gremlin().traversal().V(arg)
+        return self.gremlin().traversal().V()
 
     def refresh_scripts(self, dirname):
         for f in glob.glob(os.path.join(dirname, "*.groovy")):
