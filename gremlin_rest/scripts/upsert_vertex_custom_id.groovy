@@ -1,22 +1,23 @@
-def vs = null, v = null;
+def v = null;
 def created = false;
-if (label != null)
-	vs = g.query().has('label', label).has(id_prop, id_value).vertices();
-else
-	vs = g.query().has(id_prop, id_value).vertices();
-if (vs.count() > 0)
-	v = vs.get(0);
-else {
+try {
 	if (label != null)
-		v = g.addVertexWithLabel(label);
+		v = graph.traversal().V().has(T.label, label).has(id_prop, id_value).next();
 	else
-		v = g.addVertex();
-	v.setProperty(id_prop, id_value);
+		v = graph.traversal().query().has(id_prop, id_value).next();
+catch (NoSuchElementException) {
+}
+if (v == null) {
+	if (label != null)
+		v = graph.addVertex(T.label, label);
+	else
+		v = graph.addVertex();
+	v.property(id_prop, id_value);
 	created = true;
 };
 properties.each { k, val ->
-	v.setProperty(k, val);
+	v.property(k, val);
 };
-g.commit();
+graph.tx().commit();
 
 [v, created]

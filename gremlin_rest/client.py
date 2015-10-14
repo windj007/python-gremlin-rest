@@ -1,7 +1,7 @@
 import os, glob
 from gremlinpy.gremlin import Gremlin
 from pyarc import ClientBase
-
+from gremlin_rest.wrappers import get_wrapper
 
 __ALL__ = ['GremlinClient']
 
@@ -18,6 +18,18 @@ class _ItemGetter(object):
             return base_res.get(self.attrib, self.default)
         except:
             return self.default
+
+
+class _WrapperAssigner(object):
+    def __init__(self, base_future):
+        self.base_future = base_future
+
+    def get(self):
+        base_res = self.base_future.get()
+        try:
+            return map(get_wrapper, base_res)
+        except:
+            return base_res
 
 
 class ScriptCaller(object):
@@ -51,7 +63,7 @@ class GremlinClient(ClientBase):
         return ScriptCaller(self, script_name)
 
     def gremlin(self):
-        return ExecutableGremlin(self)
+        return ExecutableGremlin(self, graph_variable = 'graph')
 
     def refresh_scripts(self, dirname):
         for f in glob.glob(os.path.join(dirname, "*.groovy")):
@@ -78,8 +90,13 @@ class GremlinClient(ClientBase):
                                label = label,
                                properties = props)
 
+    def addVertex(self, label = None, **properties):
+        return self.run_script('addVertex',
+                               _label = label,
+                               properties = properties)
+
     ############################## Overrides ##########################
     def _do_req_base(self, *args, **kwargs):
-        return _ItemGetter(_ItemGetter(super(GremlinClient, self)._do_req_base(*args, **kwargs),
-                                       'result'),
-                           'data')
+        base_res = super(GremlinClient, self)._do_req_base(*args, **kwargs)
+        data = _ItemGetter(_ItemGetter(base_res, 'result'), 'data')
+        return _WrapperAssigner(data)
