@@ -1,7 +1,7 @@
 import os, glob
 from gremlinpy.gremlin import Gremlin
 from pyarc import ClientBase
-from gremlin_rest.wrappers import get_wrapper
+from gremlin_rest.wrappers import get_wrapper, VertexWrapper, EdgeWrapper
 
 __ALL__ = ['GremlinClient']
 
@@ -77,9 +77,18 @@ class GremlinClient(ClientBase):
 
     def V(self, arg = None):
         if not arg is None:
+            if issubclass(type(arg), VertexWrapper):
+                arg = arg.vertex_id
             return self.gremlin().traversal().V(arg)
         return self.gremlin().traversal().V()
 
+    def E(self, arg = None):
+        if not arg is None:
+            if issubclass(type(arg), EdgeWrapper):
+                arg = arg.edge_id
+            return self.gremlin().traversal().E(arg)
+        return self.gremlin().traversal().E()
+    
     def refresh_scripts(self, dirname):
         for f in glob.glob(os.path.join(dirname, "*.groovy")):
             self.load_script(f)
