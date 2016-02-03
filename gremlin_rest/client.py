@@ -111,7 +111,7 @@ class GremlinClient(ClientBase):
         return self.run_script('upsert_vertex_custom_id',
                                id_prop = id_prop,
                                id_value = id_value,
-                               label = label,
+                               _label = label,
                                properties = props)
 
     def addVertex(self, label = None, **properties):
