@@ -1,5 +1,4 @@
 import copy
-from pybrain.rl.environments.twoplayergames.capturegameplayers import clientwrapper
 
 
 class BaseWrapper(object):
