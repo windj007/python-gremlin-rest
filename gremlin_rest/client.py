@@ -33,11 +33,12 @@ class ListWithFirst(list):
 class _WrapperAssigner(object):
     def __init__(self, base_future, wrapper_mapping):
         self.base_future = base_future
+        self.wrapper_mapping = wrapper_mapping
 
     def get(self):
         base_res = self.base_future.get()
         try:
-            return ListWithFirst(map(get_wrapper, base_res))
+            return ListWithFirst(map(self.wrapper_mapping, base_res))
         except:
             return base_res
 
@@ -127,7 +128,7 @@ class GremlinClient(ClientBase):
     def _do_req_base(self, *args, **kwargs):
         base_res = super(GremlinClient, self)._do_req_base(*args, **kwargs)
         data = _ItemGetter(_ItemGetter(base_res, 'result'), 'data')
-        return _WrapperAssigner(data)
+        return _WrapperAssigner(data, self.wrapper_mapping)
     
     def __repr__(self):
         return 'GremlinClient(%r, async = %r)' % (self.base_url, self.async)
