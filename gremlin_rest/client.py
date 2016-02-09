@@ -1,7 +1,7 @@
 import os, glob
 from gremlinpy.gremlin import Gremlin
 from pyarc import ClientBase
-from gremlin_rest.wrappers import get_wrapper, VertexWrapper, EdgeWrapper
+from .wrappers import WrapperMapping
 
 __ALL__ = ['GremlinClient']
 
@@ -31,7 +31,7 @@ class ListWithFirst(list):
 
 
 class _WrapperAssigner(object):
-    def __init__(self, base_future):
+    def __init__(self, base_future, wrapper_mapping):
         self.base_future = base_future
 
     def get(self):
@@ -66,11 +66,15 @@ class GremlinClient(ClientBase):
                                             add_headers = { 'Content-Type' : 'application/json; charset=utf-8' },
                                             async = async)
         self.scripts = {}
+        self.wrapper_mapping = WrapperMapping(self)
         self.refresh_scripts(os.path.join(os.path.dirname(__file__), 'scripts'))
 
     def __getattr__(self, script_name):
         assert script_name in self.scripts, 'Trying to call unknown script %s' % script_name
         return ScriptCaller(self, script_name)
+
+    def register_wrapper(self, type, label, func):
+        self.wrapper_mapping.register_wrapper(type, label, func)
 
     def gremlin(self):
         return ExecutableGremlin(self, graph_variable = 'graph')
@@ -124,3 +128,6 @@ class GremlinClient(ClientBase):
         base_res = super(GremlinClient, self)._do_req_base(*args, **kwargs)
         data = _ItemGetter(_ItemGetter(base_res, 'result'), 'data')
         return _WrapperAssigner(data)
+    
+    def __repr__(self):
+        return 'GremlinClient(%r, async = %r)' % (self.base_url, self.async)

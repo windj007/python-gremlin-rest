@@ -1,16 +1,18 @@
 import copy
+from pybrain.rl.environments.twoplayergames.capturegameplayers import clientwrapper
 
 
-class VertexWrapper(object):
-    def __init__(self, impl):
+class BaseWrapper(object):
+    def __init__(self, impl, client):
         self._dict = copy.deepcopy(impl)
+        self.client = client
 
     @property
-    def vertex_id(self):
+    def id(self):
         return self._dict['id']
 
     @property
-    def vertex_label(self):
+    def label(self):
         return self._dict['label']
 
     @property
@@ -18,23 +20,27 @@ class VertexWrapper(object):
         return copy.deepcopy(self._dict['properties'])
 
     def get_all_property_values(self, key):
-        values_list = self._dict[u'properties'].get(key, [])
+        values_list = self._dict['properties'].get(key, [])
         return [v['value'] for v in values_list]
 
     def __getattr__(self, key):
-        values_list = self._dict[u'properties'].get(key, None)
+        values_list = self._dict['properties'].get(key, None)
         if values_list is None or not values_list:
             return None
         return values_list[0]['value']
     
     def __repr__(self):
-        return 'VertexWrapper(%r)' % self._dict
+        return '%s(%r, %r)' % (self.__class__.__name__,
+                               self._dict,
+                               self.client)
+
+
+class VertexWrapper(BaseWrapper):
+    def traverse(self):
+        return self.client.V(self)
 
 
 class EdgeWrapper(object):
-    def __init__(self, impl):
-        self._dict = copy.deepcopy(impl)
-
     @property
     def in_v_id(self):
         return self._dict['inV']
@@ -51,25 +57,28 @@ class EdgeWrapper(object):
     def out_v_label(self):
         return self._dict['outVLabel']
 
-    @property
-    def edge_label(self):
-        return self._dict['label']
-    
-    @property
-    def edge_id(self):
-        return self._dict['id']
+    def traverse(self):
+        return self.client.E(self)
 
-    def __getattr__(self, key):
-        return self._dict[u'properties'].get(key, None)
 
-    def __repr__(self):
-        return 'EdgeWrapper(%r)' % self._dict
+class WrapperMapping(object):
+    def __init__(self, client):
+        self.client = client
+        self._fallback = {
+                          'edge' : EdgeWrapper,
+                          'vertex' : VertexWrapper
+                          }
+        self._mapping = {
+                         'edge' : { },
+                         'vertex' : { }
+                         }
 
-def get_wrapper(elem):
-    if isinstance(elem, dict):
-        type = elem.get('type', None)
-        if type == 'vertex':
-            return VertexWrapper(elem)
-        if type == 'edge':
-            return EdgeWrapper(elem)
-    return elem
+    def register_wrapper(self, type, label, func):
+        self._mapping[type][label] = func
+
+    def __call__(self, elem):
+        if isinstance(elem, dict):
+            type, label = elem.get('type', None), elem.get('label', None)
+            wrapper_func = self._mapping[type].get(label, self._fallback[type])
+            return wrapper_func(elem, client)
+        return elem
