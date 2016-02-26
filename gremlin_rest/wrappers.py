@@ -39,7 +39,7 @@ class VertexWrapper(BaseWrapper):
         return self.client.V(self)
 
 
-class EdgeWrapper(object):
+class EdgeWrapper(BaseWrapper):
     @property
     def in_v_id(self):
         return self._dict['inV']
@@ -79,5 +79,5 @@ class WrapperMapping(object):
         if isinstance(elem, dict):
             type, label = elem.get('type', None), elem.get('label', None)
             wrapper_func = self._mapping[type].get(label, self._fallback[type])
-            return wrapper_func(elem, client)
+            return wrapper_func(elem, self.client)
         return elem

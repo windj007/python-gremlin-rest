@@ -1,7 +1,7 @@
-import os, glob
+import os, glob, traceback, sys
 from gremlinpy.gremlin import Gremlin
 from pyarc import ClientBase
-from .wrappers import WrapperMapping
+from .wrappers import WrapperMapping, VertexWrapper, EdgeWrapper
 
 __ALL__ = ['GremlinClient']
 
@@ -17,6 +17,7 @@ class _ItemGetter(object):
         try:
             return base_res.get(self.attrib, self.default)
         except:
+            
             return self.default
 
 
@@ -40,6 +41,7 @@ class _WrapperAssigner(object):
         try:
             return ListWithFirst(map(self.wrapper_mapping, base_res))
         except:
+            print sys.stderr, traceback.format_exc()
             return base_res
 
 
@@ -83,14 +85,14 @@ class GremlinClient(ClientBase):
     def V(self, arg = None):
         if not arg is None:
             if issubclass(type(arg), VertexWrapper):
-                arg = arg.vertex_id
+                arg = arg.id
             return self.gremlin().traversal().V(arg)
         return self.gremlin().traversal().V()
 
     def E(self, arg = None):
         if not arg is None:
             if issubclass(type(arg), EdgeWrapper):
-                arg = arg.edge_id
+                arg = arg.id
             return self.gremlin().traversal().E(arg)
         return self.gremlin().traversal().E()
     
