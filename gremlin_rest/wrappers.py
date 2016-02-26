@@ -78,6 +78,9 @@ class WrapperMapping(object):
     def __call__(self, elem):
         if isinstance(elem, dict):
             type, label = elem.get('type', None), elem.get('label', None)
-            wrapper_func = self._mapping[type].get(label, self._fallback[type])
+            try:
+                wrapper_func = self._mapping[type].get(label, self._fallback[type])
+            except KeyError:
+                wrapper_func = lambda x, y: x
             return wrapper_func(elem, self.client)
         return elem
