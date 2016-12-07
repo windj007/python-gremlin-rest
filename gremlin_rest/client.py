@@ -64,13 +64,14 @@ class ExecutableGremlin(Gremlin):
 
 
 class GremlinClient(ClientBase):
-    def __init__(self, base_url, async = False):
+    def __init__(self, base_url, async = False, graph_variable = 'graph'):
         super(GremlinClient, self).__init__(base_url,
                                             add_headers = { 'Content-Type' : 'application/json; charset=utf-8' },
                                             async = async)
         self.scripts = {}
         self.wrapper_mapping = WrapperMapping(self)
         self.refresh_scripts(os.path.join(os.path.dirname(__file__), 'scripts'))
+        self.graph_variable = graph_variable
 
     def __getattr__(self, script_name):
         assert script_name in self.scripts, 'Trying to call unknown script %s' % script_name
@@ -80,7 +81,7 @@ class GremlinClient(ClientBase):
         self.wrapper_mapping.register_wrapper(type, label, func)
 
     def gremlin(self):
-        return ExecutableGremlin(self, graph_variable = 'graph')
+        return ExecutableGremlin(self, graph_variable = self.graph_variable)
 
     def V(self, arg = None):
         if not arg is None:
